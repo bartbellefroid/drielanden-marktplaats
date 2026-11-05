@@ -42,6 +42,11 @@ Onder de zoekbalk staat altijd waar de vertaling vandaan komt. Termen zijn altij
 
 Het zoekgebied staat op een kaart van [OpenStreetMap](https://www.openstreetmap.org/copyright), getekend met [Leaflet](https://leafletjs.com/) 1.9.4. Die wordt geladen via cdnjs. De ringen laten zien vanaf welk punt elke site de straal meet. Die punten zijn bij benadering. Laden de kaarttegels niet binnen 6 seconden, bijvoorbeeld in een Claude-artifact, dan toont de pagina een schematisch kaartje.
 
+## Logo's
+
+- eBay, Facebook en Kleinanzeigen: ingebouwd in de pagina ([Simple Icons](https://simpleicons.org/), CC0).
+- De andere sites: eerst `logos/<domein>.png` uit deze repo, dan de favicon-dienst van Google, dan die van DuckDuckGo. Lukt geen van drieën, dan staat er een letter. Zie [`logos/README.md`](logos/README.md).
+
 ## Bekende beperkingen
 
 - **De zoek-URL's zijn nog niet getest.** Ze zijn gebaseerd op de bekende URL-opbouw van de sites, niet op officiële documentatie. Het minst zeker zijn het postcodeformaat bij Kleinanzeigen (`/s-<PLZ>/<term>/k0r<km>`) en de eBay-parameters `_stpos` en `_sadis`. Naast elke link staat een "via Google"-knop als reserve.

@@ -72,7 +72,8 @@ form.search svg{flex:none;color:var(--muted)}
 .res{display:grid;gap:4px;min-width:0}
 .site{display:flex;align-items:center;gap:10px;min-width:0}
 .fav{width:28px;height:28px;border-radius:50%;background:var(--soft);border:1px solid var(--line);display:grid;place-items:center;flex:none;overflow:hidden;font-weight:800;font-size:13px;color:var(--c)}
-.fav img{width:18px;height:18px}
+.fav img,.fav svg{width:18px;height:18px;display:block}
+.fav.logo{background:#ffffff}
 .site .nm{font-size:14px;line-height:1.25;min-width:0}
 .site .nm .row{display:flex;align-items:center;gap:6px;font-weight:600}
 .site .nm .url{display:block;color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -110,7 +111,7 @@ aside{display:grid;gap:16px}
   <form class="search" id="form" role="search">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
     <input id="q" value="bosmaaier" autocomplete="off" aria-label="Wat zoek je? In het Nederlands">
-    <select id="radius" aria-label="Straal">
+    <select id="radius" aria-label="Straal (wordt toegepast na Zoeken)">
       <option value="10">10 km</option><option value="20" selected>20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="100">100 km</option>
     </select>
     <button type="submit" id="go">Zoeken</button>
@@ -125,7 +126,7 @@ aside{display:grid;gap:16px}
       <div class="field"><label for="pcBE">Postcode BE</label><input id="pcBE" value="3790"></div>
       <div class="field"><label for="pcDE">PLZ DE</label><input id="pcDE" value="52074"></div>
       <div class="field"><label for="fbCity">Facebook-stad</label><input id="fbCity" value="maastricht"></div>
-      <p class="hint" style="grid-column:1/-1">Meerdere zoektermen scheid je met een komma. Elke term krijgt een eigen link. <a id="gt" href="#" target="_blank" rel="noopener">Vertaling controleren in Google Translate</a></p>
+      <p class="hint" style="grid-column:1/-1">Meerdere zoektermen scheid je met een komma. Elke term krijgt een eigen link. Druk daarna op Zoeken of Enter. <a id="gt" href="#" target="_blank" rel="noopener">Vertaling controleren in Google Translate</a></p>
     </div>
   </details>
 </header>
@@ -393,29 +394,39 @@ function el(tag, props={}, kids=[]){
 }
 const ext = (href, text) => el("a",{href, target:"_blank", rel:"noopener", text});
 
-// Logo's: eerst het eigen icoon van de site, dan DuckDuckGo, dan Google. Lukt geen van drieën, dan een letter.
+// Ingebouwde logo's (Simple Icons, CC0-licentie): werken altijd, ook zonder externe dienst
+const ICONS = {
+  "ebay.de":{hex:"#E53238", d:"M6.056 12.132v-4.92h1.2v3.026c.59-.703 1.402-.906 2.202-.906 1.34 0 2.828.904 2.828 2.855 0 .233-.015.457-.06.668.24-.953 1.274-1.305 2.896-1.344.51-.018 1.095-.018 1.56-.018v-.135c0-.885-.556-1.244-1.53-1.244-.72 0-1.245.3-1.305.81h-1.275c.136-1.29 1.5-1.62 2.686-1.62 1.064 0 1.995.27 2.415 1.02l-.436-.84h1.41l2.055 4.125 2.055-4.126H24l-3.72 7.305h-1.346l1.07-2.04-2.33-4.38c.13.255.2.555.2.93v2.46c0 .346.01.69.04 1.005H16.8a6.543 6.543 0 01-.046-.765c-.603.734-1.32.96-2.32.96-1.48 0-2.272-.78-2.272-1.695 0-.15.015-.284.037-.405-.3 1.246-1.36 2.086-2.767 2.086-.87 0-1.694-.315-2.2-.93 0 .24-.015.494-.04.734h-1.18c.02-.39.04-.855.04-1.245v-1.05h-4.83c.065 1.095.818 1.74 1.853 1.74.718 0 1.355-.3 1.568-.93h1.24c-.24 1.29-1.61 1.725-2.79 1.725C.95 15.009 0 13.822 0 12.232c0-1.754.982-2.91 3.116-2.91 1.688 0 2.93.886 2.94 2.806v.005zm9.137.183c-1.095.034-1.77.233-1.77.95 0 .465.36.97 1.305.97 1.26 0 1.935-.69 1.935-1.814v-.13c-.45 0-.99.006-1.484.022h.012zm-6.06 1.875c1.11 0 1.876-.806 1.876-2.02s-.768-2.02-1.893-2.02c-1.11 0-1.89.806-1.89 2.02s.765 2.02 1.875 2.02h.03zm-4.35-2.514c-.044-1.125-.854-1.546-1.725-1.546-.944 0-1.694.474-1.815 1.546z"},
+  "facebook.com":{hex:"#0866FF", d:"M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"},
+  "kleinanzeigen.de":{hex:"#1D4B00", d:"M17.064 24c-3.234 0-4.816-2.245-5.137-2.71-.955.935-2.396 2.71-4.991 2.71-2.998 0-5.524-2.254-5.524-5.908V5.907C1.412 2.245 3.942 0 6.936 0c2.993 0 5.524 2.385 5.524 5.852a5.512 5.512 0 0 1 1.842-.314c3.083 0 5.524 2.515 5.524 5.538 0 .848-.161 1.602-.513 2.324a5.539 5.539 0 0 1 3.275 5.062c0 3.053-2.478 5.538-5.524 5.538zm-3.802-4.048c.795 1.383 2.132 2.202 3.802 2.202a3.692 3.692 0 0 0 3.683-3.692 3.689 3.689 0 0 0-2.518-3.505l-4.967 4.995zM6.936 1.846c-1.832 0-3.683 1.256-3.683 4.061v12.185c0 2.806 1.85 4.062 3.683 4.062 1.456 0 2.26-.736 3.557-2.037l.575-.576c-.297-.886-.45-1.869-.45-2.926V5.908c0-2.806-1.849-4.062-3.682-4.062zm5.524 6.031v8.738c0 .495.042.966.12 1.409l4.003-4.013c1.163-1.165 1.402-2.016 1.402-2.934 0-1.962-1.573-3.692-3.683-3.692-.657 0-1.285.169-1.842.493z"}
+};
+// Overige logo's: eerst een eigen bestand in de map logos/ (bijv. logos/marktplaats.nl.png), dan Google, dan DuckDuckGo. Lukt niets, dan een letter.
 const FAV = {}; // per domein: gevonden logo-adres, of false als geen bron werkte
 function favicon(s, color){
   const box = el("span",{class:"fav", style:`--c:${color}`, "aria-hidden":"true"});
+  const ic = ICONS[s.domain];
+  if(ic){
+    const ns="http://www.w3.org/2000/svg", svg=document.createElementNS(ns,"svg"), p=document.createElementNS(ns,"path");
+    svg.setAttribute("viewBox","0 0 24 24"); svg.setAttribute("width","18"); svg.setAttribute("height","18");
+    p.setAttribute("d",ic.d); p.setAttribute("fill",ic.hex); svg.append(p);
+    box.classList.add("logo"); box.append(svg); return box;
+  }
   box.textContent = s.name.charAt(0).toUpperCase();
+  const show = src => { const im=new Image(); im.alt=""; im.src=src; box.textContent=""; box.classList.add("logo"); box.append(im); };
   if(FAV[s.domain] === false) return box;
-  if(FAV[s.domain]){ const im=new Image(); im.alt=""; im.src=FAV[s.domain]; box.textContent=""; box.append(im); return box; }
+  if(FAV[s.domain]){ show(FAV[s.domain]); return box; }
   const sources = [
-    `https://www.${s.domain}/favicon.ico`,
-    `https://icons.duckduckgo.com/ip3/${s.domain}.ico`,
+    `logos/${s.domain}.png`,
     `https://www.google.com/s2/favicons?domain=${s.domain}&sz=64`,
+    `https://icons.duckduckgo.com/ip3/${s.domain}.ico`,
   ];
   let i = 0;
   const tryNext = () => {
     if(i >= sources.length){ FAV[s.domain]=false; return; }
-    const img = new Image(); img.alt=""; img.referrerPolicy="no-referrer";
-    img.onload = () => {
-      // Google geeft voor onbekende sites een grijze wereldbol van 16 px terug; die tellen we als mislukt
-      if(img.naturalWidth <= 1 || (i===3 && img.naturalWidth<=16)){ tryNext(); return; }
-      FAV[s.domain]=img.src; box.textContent=""; box.append(img);
-    };
+    const src = sources[i++], img = new Image();
+    img.onload = () => { if(img.naturalWidth > 1){ FAV[s.domain]=src; show(src); } else tryNext(); };
     img.onerror = tryNext;
-    img.src = sources[i++];
+    img.src = src;
   };
   tryNext();
   return box;
@@ -612,10 +623,17 @@ async function translate(){
   } finally { $("go").disabled=false; render(); }
 }
 
-$("form").addEventListener("submit", e=>{ e.preventDefault(); translate(); });
-for(const id of ["de","fr"]) $(id).addEventListener("input",()=>{ translationSource="zelf"; render(); });
-for(const id of ["radius","pcNL","pcBE","pcDE","fbCity"]) $(id).addEventListener("input", render);
-$("q").addEventListener("input",()=>{ if(translationSource!=="zelf") translationSource="oud"; render(); });
+// De pagina verandert pas na Zoeken of Enter. Bij een nieuwe zoekterm wordt opnieuw vertaald;
+// bij dezelfde zoekterm blijven zelf aangepaste vertalingen staan.
+let lastQ = $("q").value.trim(), manual = false;
+async function search(){
+  const q = $("q").value.trim();
+  if(q && q !== lastQ){ manual = false; lastQ = q; await translate(); }
+  else { if(manual) translationSource = "zelf"; render(); }
+}
+$("form").addEventListener("submit", e=>{ e.preventDefault(); search(); });
+for(const id of ["de","fr"]) $(id).addEventListener("input",()=>{ manual = true; });
+for(const id of ["de","fr","pcNL","pcBE","pcDE","fbCity"]) $(id).addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); search(); } });
 render();
 initLeaflet();
 </script>
