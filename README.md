@@ -15,6 +15,8 @@ Je typt één keer in het Nederlands wat je zoekt. De zoekterm wordt vertaald na
 | BE | [2ememain.be](https://www.2ememain.be) | FR | 3790 Voeren |
 | DE | [Kleinanzeigen.de](https://www.kleinanzeigen.de) | DE | 52074 Aachen |
 | DE | [eBay.de](https://www.ebay.de) | DE | 52074 Aachen |
+| DE | [markt.de](https://www.markt.de) | DE | geen (heel Duitsland) |
+| DE | [Quoka](https://www.quoka.de) | DE | geen (zoekt via Google) |
 | Alle | [Facebook Marketplace](https://www.facebook.com/marketplace) | NL/DE/FR | Maastricht |
 
 De middelpunten zijn aan te passen onder **Instellingen** op de pagina.
@@ -34,10 +36,12 @@ De online versie draait op GitHub Pages (Settings → Pages → Deploy from a br
 ## Bekende beperkingen
 
 - **De zoek-URL's zijn nog niet getest.** Ze zijn gebaseerd op de bekende URL-opbouw van de sites, niet op officiële documentatie. Het minst zeker zijn het postcodeformaat bij Kleinanzeigen (`/s-<PLZ>/<term>/k0r<km>`) en de eBay-parameters `_stpos` en `_sadis`. Naast elke link staat een "via Google"-knop als reserve.
+- **markt.de en Quoka** filteren nog niet op straal. markt.de krijgt een zoeklink met alleen de zoekterm (`/suche/<term>/`). Voor Quoka is de directe zoeklink nog onbekend, dus die zoekt via Google op quoka.de. Bij beide staat een knop "site openen" om zelf met straal te zoeken.
 - Buitenlandse sites meten de straal vanaf een postcode in hun eigen land, niet vanaf Mheer.
 - De pagina haalt zelf geen advertenties op. Ze opent de zoekresultaten op de sites zelf, omdat scrapen meestal niet is toegestaan in de gebruiksvoorwaarden.
 
 ## Ideeën voor later
 
-- Meer sites: Quoka.de, markt.de, Vinted.
+- Meer sites, zoals Vinted.
+- Straal en postcode in de links van markt.de en Quoka, zodra de URL-opbouw bekend is.
 - Tweedehands auto's uit BE/DE met een schatting van de importkosten (BPM, RDW-keuring, transport).

@@ -173,6 +173,8 @@ function sites(){
     {code:"DE", name:"Duitsland", color:"var(--de)", center:`Straal vanaf PLZ ${pc.DE} (Aachen-West, ongeveer 18 km van Mheer)`, list:[
       {name:"Kleinanzeigen", lang:"de", url:t=>`https://www.kleinanzeigen.de/s-${pc.DE}/${slug(t)}/k0r${kaRadius(r)}`, g:"kleinanzeigen.de", note:`Kleinanzeigen kent vaste stralen. Gekozen: ${kaRadius(r)} km.`},
       {name:"eBay.de", lang:"de", url:t=>`https://www.ebay.de/sch/i.html?_nkw=${enc(t)}&_stpos=${pc.DE}&_sadis=${r}&_sop=7`, g:"ebay.de", note:"Gesorteerd op afstand. Let op: veel aanbod is verzending."},
+      {name:"markt.de", lang:"de", url:t=>`https://www.markt.de/suche/${slug(t)}/`, g:"markt.de", home:"https://www.markt.de/", note:`Zoekt in heel Duitsland. Stel de straal rond ${pc.DE} op de site zelf in.`},
+      {name:"Quoka", lang:"de", url:t=>g("quoka.de",t), home:"https://www.quoka.de/", note:"De directe zoeklink van Quoka is nog onbekend. Deze knoppen zoeken via Google op quoka.de. Voor zoeken met straal open je Quoka zelf."},
     ]},
     {code:"Alle", name:"Over de grens heen", color:"var(--accent)", center:`Facebook Marketplace zoekt in een cirkel rond ${fb}, ongeacht de landsgrens`, list:[
       {name:"Facebook Marketplace", lang:"nl + de + fr", multi:true, url:t=>`https://www.facebook.com/marketplace/${enc(fb)}/search/?query=${enc(t)}&radius=${r}`, note:"Eén zoekgebied over drie landen. Wel een Facebook-account nodig. Zoek in alle drie de talen."},
@@ -207,6 +209,7 @@ function render(){
         const a = document.createElement("a"); a.className="main"; a.href=s.url(t); a.target="_blank"; a.rel="noopener"; a.textContent = t; links.append(a);
         if(s.g){ const b=document.createElement("a"); b.href=g(s.g,t); b.target="_blank"; b.rel="noopener"; b.textContent="via Google"; links.append(b); }
       }
+      if(s.home){ const h=document.createElement("a"); h.href=s.home; h.target="_blank"; h.rel="noopener"; h.textContent="site openen"; links.append(h); }
       if(s.note){ const n=document.createElement("span"); n.className="note"; n.textContent=s.note; card.append(n); }
       box.append(card);
     }
