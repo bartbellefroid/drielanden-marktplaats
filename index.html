@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Drielandenzoeker Mheer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: één kolom-werkblad; zoekbalk bovenaan, daaronder drie landstroken (NL / BE / DE) met zoeklinks */
+:root{
+  --bg:#f3f5f0; --surface:#ffffff; --fg:#1f2a22; --muted:#5d6a60; --line:#d6ddd3;
+  --accent:#2f6b3f; --accent-fg:#ffffff;
+  --nl:#c8571b; --be:#b58a00; --de:#3b3f46;
+  --chip:#e7ece4;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151a16; --surface:#1e2520; --fg:#e6ece5; --muted:#a2ada4; --line:#334036;
+  --accent:#7fc28f; --accent-fg:#10251a; --nl:#f08a50; --be:#e2bd3c; --de:#b9bec8; --chip:#26302a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151a16; --surface:#1e2520; --fg:#e6ece5; --muted:#a2ada4; --line:#334036;
+  --accent:#7fc28f; --accent-fg:#10251a; --nl:#f08a50; --be:#e2bd3c; --de:#b9bec8; --chip:#26302a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:860px;margin:0 auto;display:grid;gap:22px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(28px,5vw,40px);line-height:1.1;margin:0;text-wrap:balance}
+h2{font-family:var(--display);font-weight:600;font-size:20px;margin:0}
+.lede{color:var(--muted);margin:6px 0 0;max-width:62ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px}
+label{font-weight:700;font-size:14px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.field{display:grid;gap:4px;flex:1 1 200px;min-width:0}
+input,select{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);width:100%}
+input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button{font:inherit;font-weight:700;border:0;border-radius:8px;padding:11px 18px;background:var(--accent);color:var(--accent-fg);cursor:pointer}
+button.ghost{background:var(--chip);color:var(--fg)}
+.status{font-size:14px;color:var(--muted);min-height:1.5em}
+.terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.hint{font-size:13px;color:var(--muted)}
+.country{display:grid;gap:10px}
+.country header{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;border-bottom:3px solid var(--c);padding-bottom:6px}
+.country header .code{font-family:var(--display);font-weight:800;color:var(--c);letter-spacing:.06em}
+.country header .center{font-size:13px;color:var(--muted)}
+.sites{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px}
+.site{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:6px;min-width:0}
+.site b{font-size:15px}
+.site .lang{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.links{display:flex;flex-wrap:wrap;gap:6px}
+.links a{display:inline-block;text-decoration:none;font-weight:700;font-size:14px;padding:6px 10px;border-radius:6px;background:var(--chip);color:var(--fg);overflow-wrap:anywhere}
+.links a.main{background:var(--accent);color:var(--accent-fg)}
+.site .note{font-size:12.5px;color:var(--muted)}
+details summary{cursor:pointer;font-weight:700}
+details .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:10px}
+.footnote{font-size:13px;color:var(--muted);max-width:70ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>Drielandenzoeker Mheer</h1>
+    <p class="lede">Typ één keer wat je zoekt. De zoeker vertaalt het naar Duits en Frans en maakt zoeklinks voor Nederlandse, Belgische en Duitse tweedehandssites, met een straal rond Mheer.</p>
+  </div>
+
+  <form class="panel" id="form">
+    <div class="row">
+      <div class="field" style="flex:3 1 240px">
+        <label for="q">Wat zoek je? (Nederlands)</label>
+        <input id="q" value="bosmaaier" autocomplete="off">
+      </div>
+      <div class="field" style="flex:1 1 120px">
+        <label for="radius">Straal</label>
+        <select id="radius">
+          <option value="10">10 km</option>
+          <option value="20" selected>20 km</option>
+          <option value="30">30 km</option>
+          <option value="50">50 km</option>
+          <option value="100">100 km</option>
+        </select>
+      </div>
+      <button type="submit" id="go">Zoek in 3 landen</button>
+    </div>
+    <div class="status" id="status" aria-live="polite"></div>
+    <div class="terms">
+      <div class="field">
+        <label for="de">Duitse zoekterm(en)</label>
+        <input id="de" value="Freischneider, Motorsense" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="fr">Franse zoekterm(en) (Wallonië)</label>
+        <input id="fr" value="débroussailleuse" autocomplete="off">
+      </div>
+    </div>
+    <p class="hint">Meerdere woorden scheid je met een komma. Elk woord krijgt dan een eigen zoeklink. Klopt een vertaling niet? Pas hem hier aan, dan passen de links zich meteen aan. <a id="gt" href="https://translate.google.com/?sl=nl&tl=de&text=bosmaaier" target="_blank" rel="noopener">Controleer in Google Translate</a></p>
+  </form>
+
+  <div id="results" class="wrap" style="gap:26px"></div>
+
+  <details class="panel">
+    <summary>Instellingen: middelpunt per land</summary>
+    <p class="hint">Buitenlandse sites rekenen de straal vanaf een postcode in hun eigen land. Kies daarom per land een postcode zo dicht mogelijk bij Mheer.</p>
+    <div class="grid">
+      <div class="field"><label for="pcNL">Postcode NL</label><input id="pcNL" value="6261"></div>
+      <div class="field"><label for="pcBE">Postcode BE</label><input id="pcBE" value="3790"></div>
+      <div class="field"><label for="pcDE">PLZ DE</label><input id="pcDE" value="52074"></div>
+      <div class="field"><label for="fbCity">Facebook-stad</label><input id="fbCity" value="maastricht"></div>
+    </div>
+  </details>
+
+  <p class="footnote">Groene knop: zoeken met postcode en straal. Grijze knop "via Google": reserve als de directe link niet goed filtert. Sommige sites vragen om in te loggen of om cookies te accepteren. Deze pagina leest zelf geen advertenties uit. Ze opent de zoekresultaten op de site zelf.</p>
+</div>
+
+<script>
+const DICT = {
+  "bosmaaier":["Freischneider, Motorsense","débroussailleuse"],
+  "grasmaaier":["Rasenmäher","tondeuse"],
+  "zitmaaier":["Aufsitzmäher, Rasentraktor","tondeuse autoportée"],
+  "robotmaaier":["Mähroboter","robot tondeuse"],
+  "kettingzaag":["Kettensäge","tronçonneuse"],
+  "heggenschaar":["Heckenschere","taille-haie"],
+  "bladblazer":["Laubbläser","souffleur"],
+  "hogedrukreiniger":["Hochdruckreiniger","nettoyeur haute pression"],
+  "houtversnipperaar":["Häcksler","broyeur de végétaux"],
+  "kloofmachine":["Holzspalter","fendeuse"],
+  "kruiwagen":["Schubkarre","brouette"],
+  "betonmolen":["Betonmischer","bétonnière"],
+  "aggregaat":["Stromerzeuger, Notstromaggregat","groupe électrogène"],
+  "boormachine":["Bohrmaschine","perceuse"],
+  "ladder":["Leiter","échelle"],
+  "aanhanger":["Anhänger","remorque"],
+  "aanhangwagen":["Anhänger","remorque"],
+  "fiets":["Fahrrad","vélo"],
+  "e-bike":["E-Bike","vélo électrique"],
+  "elektrische fiets":["E-Bike","vélo électrique"],
+  "houtkachel":["Kaminofen, Holzofen","poêle à bois"],
+  "tuinset":["Gartenmöbel","salon de jardin"],
+  "caravan":["Wohnwagen","caravane"],
+  "kinderwagen":["Kinderwagen","poussette"],
+  "bank":["Sofa, Couch","canapé"],
+  "kast":["Schrank","armoire"],
+  "tafel":["Tisch","table"],
+  "werkbank":["Werkbank","établi"],
+  "compressor":["Kompressor","compresseur"],
+  "lasapparaat":["Schweißgerät","poste à souder"],
+  "tractor":["Traktor","tracteur"],
+  "motorfiets":["Motorrad","moto"],
+  "scooter":["Motorroller","scooter"]
+};
+
+const $ = id => document.getElementById(id);
+const split = s => s.split(",").map(x=>x.trim()).filter(Boolean);
+const enc = s => encodeURIComponent(s);
+const slug = s => encodeURIComponent(s.toLowerCase());
+const kaRadius = r => [5,10,20,30,50,100,150,200].find(v=>v>=r) || 200;
+const g = (site, t) => `https://www.google.com/search?q=${enc("site:"+site+" \""+t+"\"")}`;
+
+function sites(){
+  const r = +$("radius").value, m = r*1000;
+  const pc = {NL:$("pcNL").value.trim(), BE:$("pcBE").value.trim(), DE:$("pcDE").value.trim()};
+  const fb = $("fbCity").value.trim() || "maastricht";
+  return [
+    {code:"NL", name:"Nederland", color:"var(--nl)", center:`Straal vanaf postcode ${pc.NL} (Mheer)`, list:[
+      {name:"Marktplaats", lang:"nl", url:t=>`https://www.marktplaats.nl/q/${slug(t)}/#distanceMeters:${m}|postcode:${pc.NL}`, g:"marktplaats.nl"},
+    ]},
+    {code:"BE", name:"België", color:"var(--be)", center:`Straal vanaf postcode ${pc.BE} (Voeren, grenst aan Mheer)`, list:[
+      {name:"2dehands.be", lang:"nl", url:t=>`https://www.2dehands.be/q/${slug(t)}/#distanceMeters:${m}|postcode:${pc.BE}`, g:"2dehands.be", note:"Vlaamse site, Nederlandse zoekterm."},
+      {name:"2ememain.be", lang:"fr", url:t=>`https://www.2ememain.be/q/${slug(t)}/#distanceMeters:${m}|postcode:${pc.BE}`, g:"2ememain.be", note:"Franstalige versie van hetzelfde platform (Wallonië)."},
+    ]},
+    {code:"DE", name:"Duitsland", color:"var(--de)", center:`Straal vanaf PLZ ${pc.DE} (Aachen-West, ongeveer 18 km van Mheer)`, list:[
+      {name:"Kleinanzeigen", lang:"de", url:t=>`https://www.kleinanzeigen.de/s-${pc.DE}/${slug(t)}/k0r${kaRadius(r)}`, g:"kleinanzeigen.de", note:`Kleinanzeigen kent vaste stralen. Gekozen: ${kaRadius(r)} km.`},
+      {name:"eBay.de", lang:"de", url:t=>`https://www.ebay.de/sch/i.html?_nkw=${enc(t)}&_stpos=${pc.DE}&_sadis=${r}&_sop=7`, g:"ebay.de", note:"Gesorteerd op afstand. Let op: veel aanbod is verzending."},
+    ]},
+    {code:"Alle", name:"Over de grens heen", color:"var(--accent)", center:`Facebook Marketplace zoekt in een cirkel rond ${fb}, ongeacht de landsgrens`, list:[
+      {name:"Facebook Marketplace", lang:"nl + de + fr", multi:true, url:t=>`https://www.facebook.com/marketplace/${enc(fb)}/search/?query=${enc(t)}&radius=${r}`, note:"Eén zoekgebied over drie landen. Wel een Facebook-account nodig. Zoek in alle drie de talen."},
+    ]},
+  ];
+}
+
+function termsFor(lang){
+  const nl = split($("q").value), de = split($("de").value), fr = split($("fr").value);
+  if(lang==="nl") return nl; if(lang==="de") return de; if(lang==="fr") return fr;
+  return [...nl, ...de, ...fr];
+}
+
+function render(){
+  const out = $("results"); out.textContent = "";
+  for(const c of sites()){
+    const sec = document.createElement("section"); sec.className="country"; sec.style.setProperty("--c", c.color);
+    sec.innerHTML = `<header><span class="code"></span><h2></h2><span class="center"></span></header><div class="sites"></div>`;
+    sec.querySelector(".code").textContent = c.code;
+    sec.querySelector("h2").textContent = c.name;
+    sec.querySelector(".center").textContent = c.center;
+    const box = sec.querySelector(".sites");
+    for(const s of c.list){
+      const card = document.createElement("div"); card.className="site";
+      card.innerHTML = `<b></b><span class="lang"></span><div class="links"></div>`;
+      card.querySelector("b").textContent = s.name;
+      card.querySelector(".lang").textContent = "taal: " + s.lang;
+      const links = card.querySelector(".links");
+      const ts = termsFor(s.multi ? "all" : s.lang);
+      if(!ts.length){ links.textContent = "Vul eerst een zoekterm in."; }
+      for(const t of ts){
+        const a = document.createElement("a"); a.className="main"; a.href=s.url(t); a.target="_blank"; a.rel="noopener"; a.textContent = t; links.append(a);
+        if(s.g){ const b=document.createElement("a"); b.href=g(s.g,t); b.target="_blank"; b.rel="noopener"; b.textContent="via Google"; links.append(b); }
+      }
+      if(s.note){ const n=document.createElement("span"); n.className="note"; n.textContent=s.note; card.append(n); }
+      box.append(card);
+    }
+    out.append(sec);
+  }
+  $("gt").href = `https://translate.google.com/?sl=nl&tl=de&text=${enc($("q").value)}`;
+}
+
+let samplePromise = null;
+function getSample(){
+  if(!samplePromise) samplePromise = (window.claude?.use ? window.claude.use("sample") : Promise.resolve(null)).catch(()=>null);
+  return samplePromise;
+}
+
+async function translate(){
+  const term = $("q").value.trim().toLowerCase();
+  const st = $("status");
+  if(!term){ st.textContent = "Typ eerst wat je zoekt."; return; }
+  if(DICT[term]){
+    [$("de").value, $("fr").value] = DICT[term];
+    st.textContent = "Vertaling uit de ingebouwde woordenlijst. Pas aan als het niet klopt.";
+    render(); return;
+  }
+  const sample = await getSample();
+  if(!sample){
+    st.textContent = "Dit woord staat niet in de woordenlijst en automatisch vertalen is hier niet beschikbaar. Vul de Duitse en Franse term zelf in, bijvoorbeeld via Google Translate.";
+    $("de").value = ""; $("fr").value = ""; render(); return;
+  }
+  st.textContent = "Bezig met vertalen…"; $("go").disabled = true;
+  try{
+    const res = await sample.json(
+      `Je helpt iemand die tweedehands spullen zoekt op Duitse en Franstalig-Belgische advertentiesites.\n` +
+      `Vertaal de Nederlandse zoekterm naar de woorden die verkopers daar echt in advertentietitels gebruiken.\n` +
+      `Geef per taal 1 tot 3 korte zoektermen, de meest gebruikte eerst. Geen uitleg.\n` +
+      `Antwoord alleen met JSON: {"de":["..."],"fr":["..."]}\n\nZoekterm: ${term}`,
+      {modelTier:"quick"}
+    );
+    const de = Array.isArray(res?.de) ? res.de : [], fr = Array.isArray(res?.fr) ? res.fr : [];
+    $("de").value = de.slice(0,3).join(", "); $("fr").value = fr.slice(0,3).join(", ");
+    st.textContent = "Automatisch vertaald door Claude. Controleer de termen even.";
+  }catch(e){
+    st.textContent = e?.code==="rate_limited" ? "Even te veel vertalingen achter elkaar. Probeer het zo opnieuw of vul de termen zelf in." : "Automatisch vertalen lukte niet. Vul de Duitse en Franse term zelf in.";
+  }finally{ $("go").disabled = false; render(); }
+}
+
+$("form").addEventListener("submit", e => { e.preventDefault(); translate(); });
+for(const id of ["de","fr","radius","pcNL","pcBE","pcDE","fbCity"]) $(id).addEventListener("input", render);
+$("q").addEventListener("input", render);
+render();
+$("status").textContent = "Voorbeeld: bosmaaier binnen 20 km. Typ je eigen zoekterm en klik op Zoek in 3 landen.";
+</script>
+
+</body>
+</html>
