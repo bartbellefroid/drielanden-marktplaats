@@ -38,6 +38,10 @@ De pagina probeert een zoekterm in deze volgorde te vertalen:
 
 Onder de zoekbalk staat altijd waar de vertaling vandaan komt. Termen zijn altijd aan te passen. Meerdere termen met komma's ertussen geven elk een eigen zoeklink.
 
+## Kaart
+
+Het zoekgebied staat op een kaart van [OpenStreetMap](https://www.openstreetmap.org/copyright), getekend met [Leaflet](https://leafletjs.com/) 1.9.4. Die wordt geladen via cdnjs. De ringen laten zien vanaf welk punt elke site de straal meet. Die punten zijn bij benadering. Laden de kaarttegels niet binnen 6 seconden, bijvoorbeeld in een Claude-artifact, dan toont de pagina een schematisch kaartje.
+
 ## Bekende beperkingen
 
 - **De zoek-URL's zijn nog niet getest.** Ze zijn gebaseerd op de bekende URL-opbouw van de sites, niet op officiële documentatie. Het minst zeker zijn het postcodeformaat bij Kleinanzeigen (`/s-<PLZ>/<term>/k0r<km>`) en de eBay-parameters `_stpos` en `_sadis`. Naast elke link staat een "via Google"-knop als reserve.
