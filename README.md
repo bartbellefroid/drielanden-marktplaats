@@ -2,6 +2,8 @@
 
 Zoek tweedehands spullen rond Mheer (Zuid-Limburg) in drie landen tegelijk: Nederland, België en Duitsland.
 
+**Direct gebruiken:** https://bartbellefroid.github.io/drielanden-marktplaats/
+
 Je typt één keer in het Nederlands wat je zoekt. De zoekterm wordt vertaald naar het Duits en het Frans (voor Wallonië). Daarna krijg je per site een zoeklink met postcode en straal.
 
 ## Sites
@@ -19,9 +21,9 @@ De middelpunten zijn aan te passen onder **Instellingen** op de pagina.
 
 ## Gebruik
 
-Open `index.html` in een browser. Er is geen build-stap nodig en er zijn geen afhankelijkheden.
+Open de [online versie](https://bartbellefroid.github.io/drielanden-marktplaats/), of open `index.html` lokaal in een browser. Er is geen build-stap nodig en er zijn geen afhankelijkheden.
 
-Je kunt de pagina ook online zetten met GitHub Pages: Settings → Pages → Deploy from branch → `main`, map `/ (root)`.
+De online versie draait op GitHub Pages (Settings → Pages → Deploy from a branch). Na een push duurt het meestal een paar minuten voordat de wijziging online staat.
 
 ## Vertalen
 
