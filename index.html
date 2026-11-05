@@ -8,6 +8,7 @@
 <title>Drielandenzoeker Mheer</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;800&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
 /* Layout: zoekmachine-opbouw. Gecentreerde zoekbalk, tabs per land, resultatenlijst links, uitlegkolom (zoekgebied + wat de pagina doet) rechts; op mobiel onder elkaar */
 :root{
@@ -92,7 +93,10 @@ aside{display:grid;gap:16px}
 .card h2{font-size:16px;margin:0;font-weight:700}
 .card p,.card li{font-size:14px;color:var(--muted);margin:0}
 .card ul{margin:0;padding-left:18px;display:grid;gap:6px}
-.map svg{width:100%;height:auto;display:block}
+#map svg{width:100%;height:auto;display:block}
+#lmap{height:280px;border-radius:10px;overflow:hidden;background:var(--soft);z-index:0}
+#lmap .leaflet-control-attribution{font-size:10px}
+.mheer-label{background:none;border:0;box-shadow:none;font-weight:800;font-family:var(--font);color:#1d2433;text-shadow:0 0 3px #fff,0 0 3px #fff}
 .legend{display:grid;gap:4px;font-size:13px;color:var(--muted)}
 .legend span{display:flex;gap:8px;align-items:center}
 .legend i{width:10px;height:10px;border-radius:50%;flex:none}
@@ -136,6 +140,7 @@ aside{display:grid;gap:16px}
   <aside>
     <div class="card map">
       <h2>Zoekgebied</h2>
+      <div id="lmap" hidden></div>
       <div id="map"></div>
       <div class="legend" id="legend"></div>
       <p id="mapnote">Schematisch, afstanden bij benadering. Elke site meet de straal vanaf een postcode in het eigen land, niet vanaf Mheer.</p>
@@ -145,8 +150,9 @@ aside{display:grid;gap:16px}
       <ul>
         <li>Ze vertaalt je zoekterm en maakt per site een zoeklink. De resultaten zie je op de site zelf.</li>
         <li>Ze haalt zelf geen advertenties of foto's op. De meeste sites verbieden automatisch uitlezen.</li>
+        <li>Onbekende woorden worden automatisch vertaald via de gratis dienst MyMemory. Alleen je zoekterm wordt daarheen gestuurd.</li>
         <li>Foto's bekijken kan via "Foto's via Google". Google laat dan geïndexeerde advertenties zien. Die kunnen al verkocht zijn.</li>
-        <li>Ze slaat niets op en stuurt je zoekterm alleen naar de site die je aanklikt.</li>
+        <li>Ze slaat niets op. Je zoekterm gaat alleen naar de vertaaldienst en naar de site die je aanklikt.</li>
       </ul>
     </div>
     <div class="card">
@@ -160,41 +166,149 @@ aside{display:grid;gap:16px}
   </aside>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 const DICT = {
+  // tuin
   "bosmaaier":["Freischneider, Motorsense","débroussailleuse"],
   "grasmaaier":["Rasenmäher","tondeuse"],
+  "benzine grasmaaier":["Benzin Rasenmäher","tondeuse thermique"],
+  "elektrische grasmaaier":["Elektro Rasenmäher","tondeuse électrique"],
   "zitmaaier":["Aufsitzmäher, Rasentraktor","tondeuse autoportée"],
-  "robotmaaier":["Mähroboter","robot tondeuse"],
+  "robotmaaier":["Mähroboter, Rasenroboter","robot tondeuse"],
+  "trimmer":["Rasentrimmer","coupe-bordure"],
   "kettingzaag":["Kettensäge","tronçonneuse"],
   "heggenschaar":["Heckenschere","taille-haie"],
   "bladblazer":["Laubbläser","souffleur"],
   "hogedrukreiniger":["Hochdruckreiniger","nettoyeur haute pression"],
   "houtversnipperaar":["Häcksler","broyeur de végétaux"],
   "kloofmachine":["Holzspalter","fendeuse"],
+  "verticuteermachine":["Vertikutierer","scarificateur"],
+  "motorcultivator":["Motorhacke, Gartenfräse","motobineuse"],
   "kruiwagen":["Schubkarre","brouette"],
+  "tuinset":["Gartenmöbel","salon de jardin"],
+  "tuinstoel":["Gartenstuhl","chaise de jardin"],
+  "parasol":["Sonnenschirm","parasol"],
+  "barbecue":["Grill","barbecue"],
+  "bbq":["Grill","barbecue"],
+  "kas":["Gewächshaus","serre"],
+  "tuinhuis":["Gartenhaus","abri de jardin"],
+  "regenton":["Regentonne","récupérateur d'eau"],
+  "tuinslang":["Gartenschlauch","tuyau d'arrosage"],
+  "zwembad":["Pool","piscine"],
+  "trampoline":["Trampolin","trampoline"],
+  // klussen
   "betonmolen":["Betonmischer","bétonnière"],
   "aggregaat":["Stromerzeuger, Notstromaggregat","groupe électrogène"],
   "boormachine":["Bohrmaschine","perceuse"],
+  "accuboormachine":["Akkuschrauber","perceuse sans fil"],
+  "klopboormachine":["Schlagbohrmaschine","perceuse à percussion"],
+  "boorhamer":["Bohrhammer","perforateur"],
+  "slijptol":["Winkelschleifer, Flex","meuleuse"],
+  "cirkelzaag":["Kreissäge","scie circulaire"],
+  "decoupeerzaag":["Stichsäge","scie sauteuse"],
+  "afkortzaag":["Kappsäge","scie à onglet"],
+  "schuurmachine":["Schleifmaschine","ponceuse"],
+  "compressor":["Kompressor","compresseur"],
+  "lasapparaat":["Schweißgerät","poste à souder"],
+  "werkbank":["Werkbank","établi"],
+  "gereedschapskist":["Werkzeugkiste","caisse à outils"],
   "ladder":["Leiter","échelle"],
+  "steiger":["Gerüst","échafaudage"],
+  "bouwlamp":["Baustrahler","projecteur de chantier"],
+  "bouwdroger":["Bautrockner","déshumidificateur"],
+  "stofzuiger":["Staubsauger","aspirateur"],
+  "bouwstofzuiger":["Industriestaubsauger","aspirateur de chantier"],
+  // vervoer
   "aanhanger":["Anhänger","remorque"],
   "aanhangwagen":["Anhänger","remorque"],
   "fiets":["Fahrrad","vélo"],
-  "e-bike":["E-Bike","vélo électrique"],
-  "elektrische fiets":["E-Bike","vélo électrique"],
-  "houtkachel":["Kaminofen, Holzofen","poêle à bois"],
-  "tuinset":["Gartenmöbel","salon de jardin"],
+  "e-bike":["E-Bike, Pedelec","vélo électrique"],
+  "elektrische fiets":["E-Bike, Pedelec","vélo électrique"],
+  "racefiets":["Rennrad","vélo de course"],
+  "mountainbike":["Mountainbike, MTB","VTT"],
+  "bakfiets":["Lastenrad","vélo cargo"],
+  "kinderfiets":["Kinderfahrrad","vélo enfant"],
+  "fietsendrager":["Fahrradträger","porte-vélo"],
+  "dakkoffer":["Dachbox","coffre de toit"],
   "caravan":["Wohnwagen","caravane"],
-  "kinderwagen":["Kinderwagen","poussette"],
-  "bank":["Sofa, Couch","canapé"],
-  "kast":["Schrank","armoire"],
-  "tafel":["Tisch","table"],
-  "werkbank":["Werkbank","établi"],
-  "compressor":["Kompressor","compresseur"],
-  "lasapparaat":["Schweißgerät","poste à souder"],
-  "tractor":["Traktor","tracteur"],
+  "camper":["Wohnmobil","camping-car"],
+  "vouwwagen":["Klappwohnwagen, Faltcaravan","caravane pliante"],
   "motorfiets":["Motorrad","moto"],
-  "scooter":["Motorroller","scooter"]
+  "scooter":["Motorroller","scooter"],
+  "tractor":["Traktor","tracteur"],
+  "minitractor":["Kleintraktor","micro-tracteur"],
+  "winterbanden":["Winterreifen","pneus hiver"],
+  "velgen":["Felgen","jantes"],
+  // huis
+  "houtkachel":["Kaminofen, Holzofen","poêle à bois"],
+  "pelletkachel":["Pelletofen","poêle à pellets"],
+  "bank":["Sofa, Couch","canapé"],
+  "hoekbank":["Ecksofa","canapé d'angle"],
+  "fauteuil":["Sessel","fauteuil"],
+  "relaxstoel":["Relaxsessel, Fernsehsessel","fauteuil relax"],
+  "kast":["Schrank","armoire"],
+  "kledingkast":["Kleiderschrank","armoire"],
+  "boekenkast":["Bücherregal","bibliothèque"],
+  "dressoir":["Sideboard, Kommode","buffet"],
+  "tafel":["Tisch","table"],
+  "eettafel":["Esstisch","table à manger"],
+  "stoelen":["Stühle","chaises"],
+  "bureau":["Schreibtisch","bureau"],
+  "bureaustoel":["Bürostuhl","chaise de bureau"],
+  "bed":["Bett","lit"],
+  "boxspring":["Boxspringbett","lit boxspring"],
+  "matras":["Matratze","matelas"],
+  "wasmachine":["Waschmaschine","machine à laver"],
+  "droger":["Wäschetrockner","sèche-linge"],
+  "vaatwasser":["Spülmaschine","lave-vaisselle"],
+  "koelkast":["Kühlschrank","frigo"],
+  "vriezer":["Gefrierschrank, Gefriertruhe","congélateur"],
+  "oven":["Backofen","four"],
+  "magnetron":["Mikrowelle","micro-ondes"],
+  "koffiemachine":["Kaffeevollautomat, Kaffeemaschine","machine à café"],
+  "televisie":["Fernseher","télévision"],
+  "tv":["Fernseher","télévision"],
+  "lamp":["Lampe","lampe"],
+  "vloerkleed":["Teppich","tapis"],
+  "spiegel":["Spiegel","miroir"],
+  // kinderen & dieren
+  "kinderwagen":["Kinderwagen","poussette"],
+  "buggy":["Buggy","poussette"],
+  "autostoel":["Kindersitz","siège auto"],
+  "box":["Laufstall","parc bébé"],
+  "kinderstoel":["Hochstuhl","chaise haute"],
+  "speelgoed":["Spielzeug","jouets"],
+  "lego":["Lego","Lego"],
+  "hondenbench":["Hundebox","cage pour chien"],
+  "kippenhok":["Hühnerstall","poulailler"],
+  "konijnenhok":["Kaninchenstall","clapier"],
+  // hobby & sport
+  "piano":["Klavier","piano"],
+  "gitaar":["Gitarre","guitare"],
+  "naaimachine":["Nähmaschine","machine à coudre"],
+  "hometrainer":["Heimtrainer, Ergometer","vélo d'appartement"],
+  "loopband":["Laufband","tapis de course"],
+  "tent":["Zelt","tente"],
+  "kano":["Kanu, Kajak","canoë"],
+  "ski's":["Ski","skis"],
+  "fototoestel":["Kamera","appareil photo"],
+  "camera":["Kamera","appareil photo"],
+  "laptop":["Laptop, Notebook","ordinateur portable"],
+  "telefoon":["Handy, Smartphone","téléphone"],
+  "spelcomputer":["Spielkonsole","console de jeux"]
+};
+// Andere schrijfwijzen die naar hetzelfde woord verwijzen
+const ALIAS = {
+  "robot grasmaaier":"robotmaaier","robotgrasmaaier":"robotmaaier","maairobot":"robotmaaier","grasmaairobot":"robotmaaier",
+  "gras maaier":"grasmaaier","motorzeis":"bosmaaier","bosmaaiers":"bosmaaier","grastrimmer":"trimmer","kantenmaaier":"trimmer",
+  "motorzaag":"kettingzaag","hogedrukspuit":"hogedrukreiniger","karcher":"hogedrukreiniger","kärcher":"hogedrukreiniger",
+  "haardkachel":"houtkachel","kachel":"houtkachel","houtfornuis":"houtkachel","generator":"aggregaat","stroomaggregaat":"aggregaat",
+  "accuboor":"accuboormachine","schroefmachine":"accuboormachine","haakse slijper":"slijptol","flex":"slijptol",
+  "aanhangwagentje":"aanhanger","bagagewagen":"aanhanger","ebike":"e-bike","elektrische fietsen":"elektrische fiets",
+  "mtb":"mountainbike","sofa":"bank","zitbank":"bank","eethoektafel":"eettafel","eetkamerstoelen":"stoelen","stoel":"stoelen",
+  "wasdroger":"droger","afwasmachine":"vaatwasser","ijskast":"koelkast","diepvries":"vriezer","vrieskist":"vriezer",
+  "tv-meubel":"dressoir","kinderbox":"box","maxi-cosi":"autostoel","kinderzitje":"autostoel"
 };
 
 const $ = id => document.getElementById(id);
@@ -211,6 +325,8 @@ let activeTab = "all";
 
 // Benaderde ligging van de standaard-middelpunten t.o.v. Mheer, in km (x = oost, y = noord)
 const POS = {NL:{x:0,y:0,label:"Mheer (6261)"}, BE:{x:1.8,y:-4.2,label:"Voeren (3790)"}, DE:{x:17.4,y:-1.0,label:"Aachen-West (52074)"}, FB:{x:-7.1,y:7.4,label:"Maastricht (Facebook)"}};
+// Benaderde coördinaten (lat, lon) van dezelfde punten, voor de echte kaart
+const LL = {NL:[50.7836,5.7945], BE:[50.7460,5.8150], DE:[50.7750,6.0400], FB:[50.8510,5.6900]};
 const DEFAULTS = {pcNL:"6261", pcBE:"3790", pcDE:"52074", fbCity:"maastricht"};
 
 const COUNTRIES = [
@@ -277,13 +393,31 @@ function el(tag, props={}, kids=[]){
 }
 const ext = (href, text) => el("a",{href, target:"_blank", rel:"noopener", text});
 
+// Logo's: eerst het eigen icoon van de site, dan DuckDuckGo, dan Google. Lukt geen van drieën, dan een letter.
+const FAV = {}; // per domein: gevonden logo-adres, of false als geen bron werkte
 function favicon(s, color){
   const box = el("span",{class:"fav", style:`--c:${color}`, "aria-hidden":"true"});
-  const letter = s.name.charAt(0).toUpperCase();
-  const img = new Image(); img.alt=""; img.width=18; img.height=18;
-  img.onerror = () => { box.textContent = letter; };
-  img.src = `https://www.google.com/s2/favicons?domain=${s.domain}&sz=64`;
-  box.append(img);
+  box.textContent = s.name.charAt(0).toUpperCase();
+  if(FAV[s.domain] === false) return box;
+  if(FAV[s.domain]){ const im=new Image(); im.alt=""; im.src=FAV[s.domain]; box.textContent=""; box.append(im); return box; }
+  const sources = [
+    `https://www.${s.domain}/favicon.ico`,
+    `https://icons.duckduckgo.com/ip3/${s.domain}.ico`,
+    `https://www.google.com/s2/favicons?domain=${s.domain}&sz=64`,
+  ];
+  let i = 0;
+  const tryNext = () => {
+    if(i >= sources.length){ FAV[s.domain]=false; return; }
+    const img = new Image(); img.alt=""; img.referrerPolicy="no-referrer";
+    img.onload = () => {
+      // Google geeft voor onbekende sites een grijze wereldbol van 16 px terug; die tellen we als mislukt
+      if(img.naturalWidth <= 1 || (i===3 && img.naturalWidth<=16)){ tryNext(); return; }
+      FAV[s.domain]=img.src; box.textContent=""; box.append(img);
+    };
+    img.onerror = tryNext;
+    img.src = sources[i++];
+  };
+  tryNext();
   return box;
 }
 
@@ -294,7 +428,7 @@ function renderAsked(){
     const ts = termsFor(lang);
     box.append(el("span",{class:"chip"},[el("b",{text:code}), document.createTextNode(ts.length?ts.join(" · "):"(leeg)")]));
   }
-  const labels = {woordenlijst:"vertaling uit de ingebouwde woordenlijst", claude:"automatisch vertaald door Claude, even controleren", zelf:"vertaling zelf ingevuld", geen:"geen vertaling gevonden, vul Duits en Frans zelf in", bezig:"bezig met vertalen…"};
+  const labels = {woordenlijst:"vertaling uit de ingebouwde woordenlijst", claude:"automatisch vertaald door Claude, even controleren", mymemory:"automatisch vertaald via MyMemory, letterlijke vertaling, even controleren", zelf:"vertaling zelf ingevuld", geen:"geen vertaling gevonden, vul Duits en Frans zelf in", bezig:"bezig met vertalen…", oud:"druk op Zoeken om opnieuw te vertalen"};
   box.append(el("span",{class:"src", text:"· "+labels[translationSource]}));
 }
 
@@ -341,8 +475,45 @@ function render(){
   $("gt").href = `https://translate.google.com/?sl=nl&tl=de&text=${enc($("q").value)}`;
 }
 
+let lmap = null, lgroup = null, mapMode = "svg";
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#888"; }
+function initLeaflet(){
+  if(!window.L) return;
+  const box = $("lmap"); box.hidden = false; $("map").hidden = true; mapMode = "pending";
+  try{
+    lmap = L.map(box, {scrollWheelZoom:false, zoomControl:true, zoomSnap:0.25}).setView(LL.NL, 10);
+    const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:17, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-bijdragers'}).addTo(lmap);
+    lgroup = L.layerGroup().addTo(lmap);
+    let ok = false;
+    tiles.on("tileload", () => { if(!ok){ ok = true; mapMode = "leaflet"; renderMap(); } });
+    setTimeout(() => { if(!ok) fallbackToSvg(); }, 6000);
+    renderMap();
+  }catch(e){ fallbackToSvg(); }
+}
+function fallbackToSvg(){
+  try{ lmap && lmap.remove(); }catch(e){}
+  lmap = null; lgroup = null; mapMode = "svg";
+  $("lmap").hidden = true; $("map").hidden = false; renderMap();
+}
+function renderLeaflet(r, defaults){
+  lgroup.clearLayers();
+  const shapes = [];
+  if(defaults) for(const [k,c] of [["BE","--be"],["DE","--de"],["FB","--all"]]){
+    const rr = (k==="DE"?kaRadius(r):r)*1000, col = cssVar(c);
+    shapes.push(L.circle(LL[k],{radius:rr,color:col,weight:1.5,opacity:.8,fillColor:col,fillOpacity:.08}).addTo(lgroup));
+    L.circleMarker(LL[k],{radius:5,color:"#fff",weight:1.5,fillColor:col,fillOpacity:1}).bindTooltip(POS[k].label).addTo(lgroup);
+  }
+  const nl = cssVar("--nl");
+  shapes.push(L.circle(LL.NL,{radius:r*1000,color:nl,weight:2.5,dashArray:"6 5",fill:false}).addTo(lgroup));
+  L.circleMarker(LL.NL,{radius:6,color:"#fff",weight:2,fillColor:nl,fillOpacity:1}).bindTooltip("Mheer",{permanent:true,direction:"right",className:"mheer-label",offset:[6,0]}).addTo(lgroup);
+  const b = L.featureGroup(shapes).getBounds();
+  lmap.invalidateSize(); lmap.fitBounds(b,{padding:[8,8]});
+}
+
 function renderMap(){
   const r = +$("radius").value;
+  const defaultsL = ["pcNL","pcBE","pcDE","fbCity"].every(k=>$(k).value.trim().toLowerCase()===DEFAULTS[k]);
+  if(lmap && lgroup && mapMode!=="svg"){ renderLeaflet(r, defaultsL); renderLegend(r, defaultsL); return; }
   const ext_ = Math.max(r + 20, 30);
   const W = 320, H = 240, sc = Math.min(W,H)/(2*ext_)*1.05;
   const cx = W/2 - 6*sc, cy = H/2;
@@ -365,6 +536,9 @@ function renderMap(){
   add("line",{x1:14,y1:H-16,x2:14+10*sc,y2:H-16,stroke:"var(--muted)","stroke-width":2});
   add("text",{x:14,y:H-22,fill:"var(--muted)","font-size":11,"font-family":"inherit"},"10 km");
   const m = $("map"); m.textContent=""; m.append(svg);
+  renderLegend(r, defaults);
+}
+function renderLegend(r, defaults){
   const lg = $("legend"); lg.textContent="";
   const row = (c, t, dashed) => el("span",{},[el("i",{style:dashed?`border:2px dashed ${c};background:none`:`background:${c}`}), document.createTextNode(t)]);
   lg.append(row("var(--nl)",`Jouw cirkel: ${r} km rond Mheer (Marktplaats)`,true));
@@ -374,7 +548,7 @@ function renderMap(){
     lg.append(row("var(--all)",`Facebook: vanaf ${POS.FB.label}`));
   }
   $("mapnote").textContent = defaults
-    ? "Schematisch, afstanden bij benadering, zonder landsgrenzen. Elke site meet de straal vanaf een postcode in het eigen land, niet vanaf Mheer."
+    ? (mapMode==="svg" ? "Schematisch, afstanden bij benadering, zonder landsgrenzen. Elke site meet de straal vanaf een postcode in het eigen land, niet vanaf Mheer." : "Middelpunten bij benadering. Elke site meet de straal vanaf een postcode in het eigen land, niet vanaf Mheer. Kaart: OpenStreetMap.")
     : "Je hebt de middelpunten aangepast. De kaart toont daarom alleen de cirkel rond Mheer.";
 }
 
@@ -384,30 +558,66 @@ function getSample(){
   return samplePromise;
 }
 
+function norm(t){ return t.toLowerCase().replace(/\s+/g," ").trim(); }
+function lookup(term){
+  const t = norm(term);
+  const tries = [t, t.replace(/ /g,""), t.replace(/-/g," "), t.replace(/(en|s)$/,"")];
+  for(const k of tries){
+    if(DICT[k]) return DICT[k];
+    if(ALIAS[k] && DICT[ALIAS[k]]) return DICT[ALIAS[k]];
+  }
+  return null;
+}
+
+// Gratis vertaaldienst MyMemory (translated.net), zonder account. Werkt op GitHub Pages; binnen een Claude-artifact blokkeert de beveiliging dit.
+async function myMemory(term, target){
+  const ctrl = new AbortController(); const timer = setTimeout(()=>ctrl.abort(), 7000);
+  try{
+    const r = await fetch(`https://api.mymemory.translated.net/get?q=${enc(term)}&langpair=nl|${target}`, {signal:ctrl.signal});
+    if(!r.ok) return [];
+    const j = await r.json();
+    if(j.responseStatus!==200 && j.responseStatus!=="200") return [];
+    const out = [];
+    const push = x => { x = (x||"").replace(/[.!?]+$/,"").trim(); if(x && !/MYMEMORY|QUERY LENGTH|INVALID/i.test(x) && norm(x)!==norm(term) && !out.some(o=>norm(o)===norm(x))) out.push(x); };
+    push(j.responseData?.translatedText);
+    for(const m of (j.matches||[])) if((+m.match||0)>=0.75 && m.translation && m.translation.length<40) push(m.translation);
+    return out.slice(0,2);
+  }catch(e){ return []; }
+  finally{ clearTimeout(timer); }
+}
+
 async function translate(){
-  const term = $("q").value.trim().toLowerCase();
+  const term = $("q").value.trim();
   if(!term) return;
-  if(DICT[term]){ [$("de").value,$("fr").value] = DICT[term]; translationSource="woordenlijst"; render(); return; }
-  const sample = await getSample();
-  if(!sample){ $("de").value=""; $("fr").value=""; translationSource="geen"; render(); document.querySelector(".edit").open = true; return; }
+  const hit = lookup(term);
+  if(hit){ [$("de").value,$("fr").value] = hit; translationSource="woordenlijst"; render(); return; }
   translationSource="bezig"; renderAsked(); $("go").disabled = true;
   try{
-    const res = await sample.json(
-      `Je helpt iemand die tweedehands spullen zoekt op Duitse en Franstalig-Belgische advertentiesites.\n` +
-      `Vertaal de Nederlandse zoekterm naar de woorden die verkopers daar echt in advertentietitels gebruiken.\n` +
-      `Geef per taal 1 tot 3 korte zoektermen, de meest gebruikte eerst. Geen uitleg.\n` +
-      `Antwoord alleen met JSON: {"de":["..."],"fr":["..."]}\n\nZoekterm: ${term}`, {modelTier:"quick"});
-    const de = Array.isArray(res?.de)?res.de:[], fr = Array.isArray(res?.fr)?res.fr:[];
-    $("de").value = de.slice(0,3).join(", "); $("fr").value = fr.slice(0,3).join(", ");
-    translationSource = (de.length||fr.length) ? "claude" : "geen";
-  }catch(e){ translationSource="geen"; document.querySelector(".edit").open = true; }
-  finally{ $("go").disabled=false; render(); }
+    const sample = await getSample();
+    if(sample){
+      try{
+        const res = await sample.json(
+          `Je helpt iemand die tweedehands spullen zoekt op Duitse en Franstalig-Belgische advertentiesites.\n` +
+          `Vertaal de Nederlandse zoekterm naar de woorden die verkopers daar echt in advertentietitels gebruiken.\n` +
+          `Geef per taal 1 tot 3 korte zoektermen, de meest gebruikte eerst. Geen uitleg.\n` +
+          `Antwoord alleen met JSON: {"de":["..."],"fr":["..."]}\n\nZoekterm: ${term}`, {modelTier:"quick"});
+        const de = Array.isArray(res?.de)?res.de:[], fr = Array.isArray(res?.fr)?res.fr:[];
+        if(de.length||fr.length){ $("de").value=de.slice(0,3).join(", "); $("fr").value=fr.slice(0,3).join(", "); translationSource="claude"; return; }
+      }catch(e){ /* door naar MyMemory */ }
+    }
+    const [de, fr] = await Promise.all([myMemory(term,"de"), myMemory(term,"fr")]);
+    $("de").value = de.join(", "); $("fr").value = fr.join(", ");
+    translationSource = (de.length||fr.length) ? "mymemory" : "geen";
+    if(!(de.length&&fr.length)) document.querySelector(".edit").open = true;
+  } finally { $("go").disabled=false; render(); }
 }
 
 $("form").addEventListener("submit", e=>{ e.preventDefault(); translate(); });
 for(const id of ["de","fr"]) $(id).addEventListener("input",()=>{ translationSource="zelf"; render(); });
-for(const id of ["radius","pcNL","pcBE","pcDE","fbCity","q"]) $(id).addEventListener("input", render);
+for(const id of ["radius","pcNL","pcBE","pcDE","fbCity"]) $(id).addEventListener("input", render);
+$("q").addEventListener("input",()=>{ if(translationSource!=="zelf") translationSource="oud"; render(); });
 render();
+initLeaflet();
 </script>
 
 </body>

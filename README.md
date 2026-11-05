@@ -29,9 +29,18 @@ De online versie draait op GitHub Pages (Settings → Pages → Deploy from a br
 
 ## Vertalen
 
-- Voor ongeveer 30 veelgezochte artikelen (tuin- en klusgereedschap, fietsen, meubels) zit er een woordenlijst in de pagina (`DICT` in `index.html`).
-- Opent iemand de pagina als Claude-artifact, dan vertaalt Claude onbekende woorden automatisch. Buiten Claude (bijvoorbeeld via GitHub Pages) vul je onbekende woorden zelf in. Er staat een Google Translate-link bij.
-- Termen zijn altijd aan te passen. Meerdere termen met komma's ertussen geven elk een eigen zoeklink.
+De pagina probeert een zoekterm in deze volgorde te vertalen:
+
+1. **Ingebouwde woordenlijst** (`DICT` en `ALIAS` in `index.html`): ongeveer 120 veelgezochte artikelen, met de woorden die verkopers in advertenties gebruiken (bijv. bosmaaier → *Freischneider, Motorsense* / *débroussailleuse*). Andere schrijfwijzen zoals "robot grasmaaier" verwijzen naar hetzelfde woord.
+2. **Claude**, alleen als de pagina als Claude-artifact geopend wordt.
+3. **[MyMemory](https://mymemory.translated.net/)**, een gratis vertaaldienst zonder account. Alleen de zoekterm wordt daarheen gestuurd. Dit is een letterlijke vertaling, dus controleer hem.
+4. Lukt niets, dan vul je Duits en Frans zelf in. Er staat een Google Translate-link bij.
+
+Onder de zoekbalk staat altijd waar de vertaling vandaan komt. Termen zijn altijd aan te passen. Meerdere termen met komma's ertussen geven elk een eigen zoeklink.
+
+## Kaart
+
+Het zoekgebied staat op een kaart van [OpenStreetMap](https://www.openstreetmap.org/copyright), getekend met [Leaflet](https://leafletjs.com/) 1.9.4. Die wordt geladen via cdnjs. De ringen laten zien vanaf welk punt elke site de straal meet. Die punten zijn bij benadering. Laden de kaarttegels niet binnen 6 seconden, bijvoorbeeld in een Claude-artifact, dan toont de pagina een schematisch kaartje.
 
 ## Bekende beperkingen
 
@@ -43,5 +52,6 @@ De online versie draait op GitHub Pages (Settings → Pages → Deploy from a br
 ## Ideeën voor later
 
 - Meer sites, zoals Vinted.
+- De woordenlijst uitbreiden met woorden die Yves vaak zoekt.
 - Straal en postcode in de links van markt.de en Quoka, zodra de URL-opbouw bekend is.
 - Tweedehands auto's uit BE/DE met een schatting van de importkosten (BPM, RDW-keuring, transport).
