@@ -439,7 +439,7 @@ function renderAsked(){
     const ts = termsFor(lang);
     box.append(el("span",{class:"chip"},[el("b",{text:code}), document.createTextNode(ts.length?ts.join(" · "):"(leeg)")]));
   }
-  const labels = {woordenlijst:"vertaling uit de ingebouwde woordenlijst", claude:"automatisch vertaald door Claude, even controleren", mymemory:"automatisch vertaald via MyMemory, letterlijke vertaling, even controleren", zelf:"vertaling zelf ingevuld", geen:"geen vertaling gevonden, vul Duits en Frans zelf in", bezig:"bezig met vertalen…", oud:"druk op Zoeken om opnieuw te vertalen"};
+  const labels = {woordenlijst:"vertaling uit de ingebouwde woordenlijst", claude:"automatisch vertaald door Claude, even controleren", mymemory:"automatisch vertaald via MyMemory, letterlijke vertaling, even controleren", merk:"merk- of productnaam herkend, niet vertaald", "merk+lijst":"merknaam behouden, rest uit de woordenlijst", zelf:"vertaling zelf ingevuld", geen:"geen vertaling gevonden, vul Duits en Frans zelf in", bezig:"bezig met vertalen…", oud:"druk op Zoeken om opnieuw te vertalen"};
   box.append(el("span",{class:"src", text:"· "+labels[translationSource]}));
 }
 
@@ -597,11 +597,43 @@ async function myMemory(term, target){
   finally{ clearTimeout(timer); }
 }
 
+// Merk- en productnamen die in alle landen hetzelfde heten: die vertalen we niet
+const BRANDS = new Set(("apple iphone ipad imac macbook airpods airtag watch samsung galaxy sony playstation ps4 ps5 xbox nintendo switch wii gameboy " +
+  "google pixel huawei xiaomi oneplus oppo nokia motorola lg philips hue dyson miele bosch siemens aeg electrolux whirlpool smeg delonghi nespresso " +
+  "senseo jura krups kitchenaid thermomix vorwerk kenwood tefal braun oral-b sonos bose jbl marshall bang olufsen b&o yamaha denon marantz pioneer " +
+  "canon nikon fujifilm fuji gopro dji garmin fitbit polar tomtom lenovo dell hp asus acer msi razer logitech intel amd nvidia geforce rtx " +
+  "lego playmobil duplo barbie hotwheels ikea kartell vitra montana " +
+  "stihl husqvarna honda makita dewalt metabo hilti festool ryobi einhell black+decker worx milwaukee hikoki kärcher karcher gardena wolf-garten " +
+  "mcculloch echo toro viking cub cadet john deere kubota fendt claas weber traeger kamado big green egg " +
+  "gazelle batavus sparta cortina giant trek specialized cube cannondale scott canyon stromer vanmoof cowboy babboe urban arrow riese müller bosch " +
+  "volkswagen vw audi bmw mercedes opel ford renault peugeot citroen citroën fiat toyota kia hyundai skoda seat volvo tesla mini porsche " +
+  "vespa piaggio kawasaki suzuki ducati harley triumph ktm " +
+  "bugaboo joolz cybex maxi-cosi stokke tripp trapp babyzen yoyo thule " +
+  "adidas nike puma reebok new balance asics vans converse timberland ugg dr. martens levi's levis tommy hilfiger gucci louis vuitton rolex omega seiko casio swatch").split(/\s+/));
+function isModel(w){ return /[a-z]\d|\d[a-z]/i.test(w); } // bijv. ps5, s23, rtx3080, ms170
+function splitBrand(term){
+  const words = term.trim().split(/\s+/), keep = [], rest = [];
+  for(const w of words) (BRANDS.has(w.toLowerCase()) || isModel(w) ? keep : rest).push(w);
+  return {brand: keep.join(" "), rest: rest.join(" "), hasBrand: keep.length > 0};
+}
+
 async function translate(){
   const term = $("q").value.trim();
   if(!term) return;
   const hit = lookup(term);
   if(hit){ [$("de").value,$("fr").value] = hit; translationSource="woordenlijst"; render(); return; }
+  const sb = splitBrand(term);
+  if(sb.hasBrand){
+    // Merknaam gevonden. Staat de rest (bijv. "bosmaaier" in "stihl bosmaaier") in de woordenlijst, dan vertalen we alleen dat deel.
+    const restHit = sb.rest ? lookup(sb.rest) : null;
+    if(restHit){
+      const add = list => split(list).map(t => `${sb.brand} ${t}`).join(", ");
+      $("de").value = add(restHit[0]); $("fr").value = add(restHit[1]); translationSource = "merk+lijst";
+    } else {
+      $("de").value = term; $("fr").value = term; translationSource = "merk";
+    }
+    render(); return;
+  }
   translationSource="bezig"; renderAsked(); $("go").disabled = true;
   try{
     const sample = await getSample();
@@ -611,6 +643,7 @@ async function translate(){
           `Je helpt iemand die tweedehands spullen zoekt op Duitse en Franstalig-Belgische advertentiesites.\n` +
           `Vertaal de Nederlandse zoekterm naar de woorden die verkopers daar echt in advertentietitels gebruiken.\n` +
           `Geef per taal 1 tot 3 korte zoektermen, de meest gebruikte eerst. Geen uitleg.\n` +
+          `Merknamen, productnamen en modelnummers (zoals Apple AirPods Max, PS5, Stihl) vertaal je niet.\n` +
           `Antwoord alleen met JSON: {"de":["..."],"fr":["..."]}\n\nZoekterm: ${term}`, {modelTier:"quick"});
         const de = Array.isArray(res?.de)?res.de:[], fr = Array.isArray(res?.fr)?res.fr:[];
         if(de.length||fr.length){ $("de").value=de.slice(0,3).join(", "); $("fr").value=fr.slice(0,3).join(", "); translationSource="claude"; return; }

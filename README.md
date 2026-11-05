@@ -32,9 +32,10 @@ De online versie draait op GitHub Pages (Settings → Pages → Deploy from a br
 De pagina probeert een zoekterm in deze volgorde te vertalen:
 
 1. **Ingebouwde woordenlijst** (`DICT` en `ALIAS` in `index.html`): ongeveer 120 veelgezochte artikelen, met de woorden die verkopers in advertenties gebruiken (bijv. bosmaaier → *Freischneider, Motorsense* / *débroussailleuse*). Andere schrijfwijzen zoals "robot grasmaaier" verwijzen naar hetzelfde woord.
-2. **Claude**, alleen als de pagina als Claude-artifact geopend wordt.
-3. **[MyMemory](https://mymemory.translated.net/)**, een gratis vertaaldienst zonder account. Alleen de zoekterm wordt daarheen gestuurd. Dit is een letterlijke vertaling, dus controleer hem.
-4. Lukt niets, dan vul je Duits en Frans zelf in. Er staat een Google Translate-link bij.
+2. **Merk- en productnamen** (`BRANDS` in `index.html`, plus modelnummers zoals PS5 of S23) worden niet vertaald: "apple airpods max" blijft in alle talen "apple airpods max". Bij "stihl bosmaaier" blijft "stihl" staan en wordt alleen "bosmaaier" vertaald.
+3. **Claude**, alleen als de pagina als Claude-artifact geopend wordt.
+4. **[MyMemory](https://mymemory.translated.net/)**, een gratis vertaaldienst zonder account. Alleen de zoekterm wordt daarheen gestuurd. Dit is een letterlijke vertaling, dus controleer hem.
+5. Lukt niets, dan vul je Duits en Frans zelf in. Er staat een Google Translate-link bij.
 
 Onder de zoekbalk staat altijd waar de vertaling vandaan komt. Termen zijn altijd aan te passen. Meerdere termen met komma's ertussen geven elk een eigen zoeklink.
 
