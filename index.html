@@ -315,7 +315,11 @@ const ALIAS = {
 const $ = id => document.getElementById(id);
 const split = s => s.split(",").map(x=>x.trim()).filter(Boolean);
 const enc = s => encodeURIComponent(s);
-const slug = s => encodeURIComponent(s.toLowerCase());
+// Zoekterm in het pad van de link. Marktplaats, 2dehands en 2ememain verwachten "+" tussen woorden (apple+airpods+max),
+// Kleinanzeigen een streepje (apple-airpods-max). Met %20 zochten ze alleen op het eerste woord.
+const words = s => s.toLowerCase().trim().split(/\s+/).map(encodeURIComponent);
+const plus = s => words(s).join("+");
+const dash = s => words(s).join("-");
 const kaRadius = r => [5,10,20,30,50,100,150,200].find(v=>v>=r) || 200;
 const orQ = ts => ts.length>1 ? "("+ts.map(t=>`"${t}"`).join(" OR ")+")" : `"${ts[0]}"`;
 const gWeb = (d,ts) => `https://www.google.com/search?q=${enc("site:"+d+" "+orQ(ts))}`;
@@ -346,19 +350,19 @@ function sites(){
   const beFrom = pc.BE===DEFAULTS.pcBE ? `postcode ${pc.BE} (Voeren, ca. 5 km van Mheer)` : `postcode ${pc.BE}`;
   return [
     {name:"Marktplaats", domain:"marktplaats.nl", country:"NL", lang:"nl", filter:"radius",
-      url:t=>`https://www.marktplaats.nl/q/${slug(t)}/#distanceMeters:${m}|postcode:${pc.NL}`,
+      url:t=>`https://www.marktplaats.nl/q/${plus(t)}/#distanceMeters:${m}|postcode:${pc.NL}`,
       where:`binnen ${r} km van ${pc.NL===DEFAULTS.pcNL?"Mheer":pc.NL}`,
-      snip:`Straal gemeten vanaf postcode ${pc.NL}.`},
+      snip:`Straal gemeten vanaf postcode ${pc.NL}. Opent op je telefoon de Marktplaats-app, dan neemt die de straal niet over: houd de link ingedrukt en kies "Open in browser" (of zet de straal in de app zelf).`},
     {name:"2dehands", domain:"2dehands.be", country:"BE", lang:"nl", filter:"radius",
-      url:t=>`https://www.2dehands.be/q/${slug(t)}/#distanceMeters:${m}|postcode:${pc.BE}`,
+      url:t=>`https://www.2dehands.be/q/${plus(t)}/#distanceMeters:${m}|postcode:${pc.BE}`,
       where:`binnen ${r} km van ${pc.BE===DEFAULTS.pcBE?"Voeren":pc.BE}`,
       snip:`Vlaamse site, zoekt in het Nederlands. Straal gemeten vanaf ${beFrom}.`},
     {name:"2ememain", domain:"2ememain.be", country:"BE", lang:"fr", filter:"radius",
-      url:t=>`https://www.2ememain.be/q/${slug(t)}/#distanceMeters:${m}|postcode:${pc.BE}`,
+      url:t=>`https://www.2ememain.be/q/${plus(t)}/#distanceMeters:${m}|postcode:${pc.BE}`,
       where:`binnen ${r} km van ${pc.BE===DEFAULTS.pcBE?"Voeren":pc.BE}`,
       snip:`Franstalige versie van 2dehands, voor Wallonië. Straal gemeten vanaf ${beFrom}.`},
     {name:"Kleinanzeigen", domain:"kleinanzeigen.de", country:"DE", lang:"de", filter:"radius",
-      url:t=>`https://www.kleinanzeigen.de/s-${pc.DE}/${slug(t)}/k0r${kaRadius(r)}`,
+      url:t=>`https://www.kleinanzeigen.de/s-${pc.DE}/${dash(t)}/k0r${kaRadius(r)}`,
       where:`binnen ${kaRadius(r)} km van ${pc.DE===DEFAULTS.pcDE?"Aachen-West":pc.DE}`,
       snip:`Grootste Duitse site. Straal gemeten vanaf ${deFrom}.` + (kaRadius(r)!==r?` Kleinanzeigen kent vaste stralen, dus het wordt ${kaRadius(r)} km.`:"")},
     {name:"eBay.de", domain:"ebay.de", country:"DE", lang:"de", filter:"radius",
@@ -366,7 +370,7 @@ function sites(){
       where:`binnen ${r} km van ${pc.DE===DEFAULTS.pcDE?"Aachen-West":pc.DE}`,
       snip:`Gesorteerd op afstand vanaf ${deFrom}. Veel aanbod wordt verzonden in plaats van opgehaald.`},
     {name:"markt.de", domain:"markt.de", country:"DE", lang:"de", filter:"site",
-      url:t=>`https://www.markt.de/suche/${slug(t)}/`,
+      url:t=>`https://www.markt.de/suche/${plus(t)}/`,
       where:"in heel Duitsland",
       snip:`De link zoekt in heel Duitsland. Stel op de site zelf de straal rond ${pc.DE} in.`},
     {name:"Quoka", domain:"quoka.de", country:"DE", lang:"de", filter:"google",
