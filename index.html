@@ -2,13 +2,16 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
+<!-- Beveiliging: alleen deze bronnen mogen laden (zie README, "Beveiliging") -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://tile.openstreetmap.org https://www.google.com https://*.gstatic.com https://icons.duckduckgo.com; connect-src https://api.mymemory.translated.net; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 </head>
 <body>
 <title>Drielandenzoeker Mheer</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;800&display=swap">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="vendor/leaflet-1.9.4/leaflet.css">
 <style>
 /* Layout: zoekmachine-opbouw. Gecentreerde zoekbalk, tabs per land, resultatenlijst links, uitlegkolom (zoekgebied + wat de pagina doet) rechts; op mobiel onder elkaar */
 :root{
@@ -167,7 +170,7 @@ aside{display:grid;gap:16px}
   </aside>
 </main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="vendor/leaflet-1.9.4/leaflet.js"></script>
 <script>
 const DICT = {
   // tuin

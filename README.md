@@ -41,12 +41,30 @@ Onder de zoekbalk staat altijd waar de vertaling vandaan komt. Termen zijn altij
 
 ## Kaart
 
-Het zoekgebied staat op een kaart van [OpenStreetMap](https://www.openstreetmap.org/copyright), getekend met [Leaflet](https://leafletjs.com/) 1.9.4. Die wordt geladen via cdnjs. De ringen laten zien vanaf welk punt elke site de straal meet. Die punten zijn bij benadering. Laden de kaarttegels niet binnen 6 seconden, bijvoorbeeld in een Claude-artifact, dan toont de pagina een schematisch kaartje.
+Het zoekgebied staat op een kaart van [OpenStreetMap](https://www.openstreetmap.org/copyright), getekend met [Leaflet](https://leafletjs.com/) 1.9.4. Leaflet staat in deze repo (`vendor/leaflet-1.9.4/`, BSD-2-licentie) en wordt dus niet van een externe server geladen. De ringen laten zien vanaf welk punt elke site de straal meet. Die punten zijn bij benadering. Laden de kaarttegels niet binnen 6 seconden, bijvoorbeeld in een Claude-artifact, dan toont de pagina een schematisch kaartje.
 
 ## Logo's
 
 - eBay, Facebook en Kleinanzeigen: ingebouwd in de pagina ([Simple Icons](https://simpleicons.org/), CC0).
 - De andere sites: eerst `logos/<domein>.png` uit deze repo, dan de favicon-dienst van Google, dan die van DuckDuckGo. Lukt geen van drieën, dan staat er een letter. Zie [`logos/README.md`](logos/README.md).
+
+## Beveiliging en privacy
+
+- **Geen geheimen:** de site heeft geen wachtwoorden, API-sleutels of accounts nodig, en er staan er ook geen in de repo.
+- **Content-Security-Policy:** een `<meta>`-tag in `index.html` bepaalt welke externe bronnen de pagina mag laden:
+  - lettertypen van Google Fonts;
+  - kaarttegels van OpenStreetMap;
+  - logo's van Google en DuckDuckGo;
+  - vertalingen van MyMemory.
+
+  Alle andere scripts, frames en formulieren worden geblokkeerd. Voeg je een nieuwe externe dienst toe, zet die dan ook in deze tag.
+- **Geen externe scripts:** Leaflet staat in de repo. De versie komt van npm en is gecontroleerd tegen de officiële checksum.
+- **Wat er naar buiten gaat:**
+  - de zoekterm naar MyMemory, alleen als die niet in de woordenlijst staat en geen merknaam is;
+  - de kaartpositie naar OpenStreetMap;
+  - de domeinnamen van de sites naar Google en DuckDuckGo, voor de logo's.
+
+  De pagina slaat niets op en gebruikt geen cookies.
 
 ## Bekende beperkingen
 
